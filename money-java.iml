@@ -144,5 +144,8 @@
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-websocket:2.6.3" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-messaging:5.3.24" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-websocket:5.3.24" level="project" />
+    <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.11.3" level="project" />
+    <orderEntry type="library" name="Maven: org.telegram:telegramapi:66.2" level="project" />
+    <orderEntry type="library" name="Maven: org.jetbrains:annotations:15.0" level="project" />
   </component>
 </module>

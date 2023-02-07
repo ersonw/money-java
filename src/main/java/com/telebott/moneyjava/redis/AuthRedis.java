@@ -2,6 +2,7 @@ package com.telebott.moneyjava.redis;
 
 import com.telebott.moneyjava.dao.UserDao;
 import com.telebott.moneyjava.data.SmsCode;
+import com.telebott.moneyjava.table.AdminUser;
 import com.telebott.moneyjava.table.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +24,43 @@ public class AuthRedis {
     private RedisTemplate<String, User> userRedisTemplate;
     @Resource
     private RedisTemplate<String, SmsCode> codeRedisTemplate;
+    @Resource
+    private RedisTemplate<String, AdminUser> adminUserRedisTemplate;
     @Autowired
     private UserDao userDao;
+    public void put(AdminUser user){
+//        deleteByAdminUserId(user.getId());
+        adminUserRedisTemplate.opsForValue().set(user.getToken(),user);
+    }
+    public void deleteByAdminToken(String token){
+        adminUserRedisTemplate.delete(token);
+    }
+    public AdminUser findByAdminToken(String token) {
+        return adminUserRedisTemplate.opsForValue().get(token);
+    }
+    private List<AdminUser> getAllAdminUsers() {
+        Set<String> keys = adminUserRedisTemplate.keys("*");
+        if (keys == null) return new ArrayList<>();
+        return adminUserRedisTemplate.opsForValue().multiGet(keys);
+    }
+    public AdminUser findByAdminUserId(String userId) {
+        List<AdminUser> users = getAllAdminUsers();
+        for (AdminUser user: users) {
+            if (user.getId().equals(userId)) return user;
+        }
+        return null;
+    }
+    public void deleteByAdminUserId(String userId){
+        List<AdminUser> users = getAllAdminUsers();
+        for (AdminUser user: users) {
+            if (user.getId().equals(userId)) {
+                deleteByAdminToken(user.getToken());
+            }
+        }
+    }
     public void put(User user){
 //        userRedisTemplate.opsForValue().set(user.getToken(),user, Duration.of(60*15,SECONDS));
+        deleteByUserId(user.getId());
         userRedisTemplate.opsForValue().set(user.getToken(),user);
     }
     public void deleteByToken(String token){

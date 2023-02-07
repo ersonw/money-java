@@ -5,6 +5,7 @@ import com.telebott.moneyjava.util.ToolsUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -160,36 +161,54 @@ public class MongoAnimal<T> {
 
             @Override
             public boolean isFirst() {
-                return false;
+                return pageable.getPageNumber()==0;
             }
 
             @Override
             public boolean isLast() {
-                return false;
+                return !hasNext();
             }
 
             @Override
             public boolean hasNext() {
-                return false;
+                return pageable.getPageNumber()<getTotalPages();
             }
 
             @Override
             public boolean hasPrevious() {
-                return false;
+                return pageable.getPageNumber()>0;
             }
 
             @Override
             public Pageable nextPageable() {
-                return null;
+                return PageRequest.of(pageable.getPageNumber()+1,pageable.getPageSize(),pageable.getSort());
             }
 
             @Override
             public Pageable previousPageable() {
-                return null;
+                return PageRequest.of(pageable.getPageNumber()-1,pageable.getPageSize(),pageable.getSort());
             }
 
             @Override
             public Iterator<T> iterator() {
+                return newIterator(list);
+            }
+        };
+    }
+    public Iterator<T> newIterator(List<T> list){
+        final int[] index = {-1};
+        return new Iterator<T>() {
+            @Override
+            public boolean hasNext() {
+                return index[0] <list.size();
+            }
+
+            @Override
+            public T next() {
+                index[0]++;
+                if (hasNext()) {
+                    return list.get(index[0]);
+                }
                 return null;
             }
         };

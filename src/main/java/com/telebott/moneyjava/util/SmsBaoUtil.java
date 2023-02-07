@@ -26,13 +26,15 @@ public class SmsBaoUtil {
     public SmsBaoConfigDao smsBaoConfigDao;
     @Autowired
     public SmsRecordDao smsRecordDao;
+    private static SmsConfig smsConfig;
     private static String user;
     private static String passwd;
     private static String name;
-    public static Long smsCountMaxDay;
+    public static Long smsCountMaxDay=0L;
     private static final String opt = "opt";
     private static final String opt_wsms = "wsms";
     private static final String opt_sms = "sms";
+    private static final String opt_query = "query";
     private static final String httpUrl = "http://api.smsbao.com/opt";
     private static final String code_text = "【{name}】您的验证码是{code},60分钟内有效。若非本人操作请忽略此消息。";
     private static long lastQueryTime = 0L;
@@ -41,24 +43,32 @@ public class SmsBaoUtil {
     }
     public static boolean sendSmsCode(String phone,String code){
         if ((System.currentTimeMillis()- 1000 * 60 * 1) > lastQueryTime){
+            if (smsConfig == null) return false;
             lastQueryTime=System.currentTimeMillis();
             JSONObject object = _query();
-            System.out.println(object);
+            if (object != null){
+                self.smsBaoConfigDao.save(smsConfig.setSend(object.getLong("send")).setLast(object.getLong("last")));
+            }
+//            System.out.println(object);
         }
 //        handlerChangeMessage(phone, "653304", "test");
 //        return true;
         String result = null;
         String str = code_text.replaceAll("\\{name\\}",name).replaceAll("\\{code\\}",code);
-        if (MobileRegularExp.isMobileNumber(phone) && phone.contains("+")){
-            if (phone.startsWith("+86")){
-                result =  _sendSms(phone.substring(3),str);
+//        System.out.println(str);
+//        return false;
+        if (MobileRegularExp.isMobileNumber(phone) ){
+            if (phone.contains("+")){
+                if (phone.startsWith("+86")){
+                    result =  _sendSms(phone.substring(3),str);
+                }else {
+                    result = _sendSms(phone,str,true);
+                }
+            }else if (phone.length() == 11){
+                result = _sendSms(phone,str);
             }else {
-                result = _sendSms(phone,str,true);
+                return false;
             }
-        }else if (phone.length() == 11){
-            result = _sendSms(phone,str);
-        }else {
-            return false;
         }
         if (result == null){
             return false;
@@ -123,15 +133,16 @@ public class SmsBaoUtil {
     }
     public static JSONObject _query(){
         String data = "u="+user+"&p=" + md5(passwd);
-        String result = request(httpUrl, data);
+        String result = request(httpUrl.replaceAll(opt,opt_query), data);
         String[] res = result.split("\n");
         JSONObject object = new JSONObject();
         if (res.length > 0 && res[0].equals("0")){
             String[] t = res[1].split(",");
             object.put("send",t[0]);
-            object.put("less",t[1]);
+            object.put("last",t[1]);
+            return object;
         }
-        return object;
+        return null;
     }
     @PostConstruct
     public void init(){
@@ -145,6 +156,7 @@ public class SmsBaoUtil {
             passwd = config.getPassword();
             name = config.getName();
             smsCountMaxDay = config.getSmsCountMaxDay();
+            smsConfig = config;
         }
     }
     public static void rest(){

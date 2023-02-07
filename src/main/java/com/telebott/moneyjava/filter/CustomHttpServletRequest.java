@@ -28,26 +28,29 @@ public class CustomHttpServletRequest extends HttpServletRequestWrapper {
         this.params.putAll(request.getParameterMap());
         String content = ToolsUtil.getRequestBody(request);
         if (content == null) return;
-        if (StringUtils.isNotEmpty(request.getContentType()) && request.getContentType().contains(MediaType.APPLICATION_JSON_VALUE)){
-            String decode =  AESUtils.Decrypt(content);
-            if (decode != null){
-                content = decode;
-            }
-            JSONObject object = JSONObject.parseObject(content);
-            for (String key : object.keySet()) {
-                if (object.get(key) != null){
-                    this.addParameter(key, object.get(key));
+        this.body = content;
+        if (StringUtils.isNotEmpty(request.getContentType())){
+            if (request.getContentType().contains(MediaType.APPLICATION_JSON_VALUE)){
+                String decode =  AESUtils.Decrypt(content);
+                if (decode != null){
+                    content = decode;
+                }
+                JSONObject object = JSONObject.parseObject(content);
+                for (String key : object.keySet()) {
+                    if (object.get(key) != null){
+                        this.addParameter(key, object.get(key));
 //                    System.out.printf("%s == %b \n",key,(object.get(key) instanceof JSONArray));
-                    if (object.get(key) instanceof JSONArray){
-                        JSONArray array = (JSONArray) object.get(key);
-                        if (array.size() > 0){
-                            this.addParameter(key, array.toArray());
+                        if (object.get(key) instanceof JSONArray){
+                            JSONArray array = (JSONArray) object.get(key);
+                            if (array.size() > 0){
+                                this.addParameter(key, array.toArray());
+                            }
                         }
                     }
                 }
+            }else if (request.getContentType().contains(MediaType.MULTIPART_FORM_DATA_VALUE)){
+//                body = null;
             }
-        }else{
-            this.body = content;
         }
     }
     public static <T> List<T> getList(JSONArray array, Class<T> clazz){

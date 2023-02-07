@@ -18,9 +18,9 @@ public class ExceptionHandle {
             BusinessException businessException = (BusinessException)exception;
             return ReturnMessageUtil.error(businessException.getCode(), businessException.getMessage());
         }else {
-//            exception.printStackTrace();
+            exception.printStackTrace();
             logger.error("系统异常 {}",exception.getMessage());
-            return ReturnMessageUtil.error(-1, "未知异常:"+ exception.getMessage());
+            return ReturnMessageUtil.error(-1, "系统异常:"+ exception.getMessage());
         }
     }
 }

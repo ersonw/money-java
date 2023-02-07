@@ -62,6 +62,16 @@ public class RedisDatasourceConfiguration {
         }
         return createRedisTemplate(creatFactory(configuration));
     }
+    @Bean
+    public <T> RedisTemplate<String, T> adminUserRedisTemplate() {
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
+        configuration.setDatabase(3);
+        if (!ObjectUtils.isEmpty(password)) {
+            RedisPassword redisPassword = RedisPassword.of(password);
+            configuration.setPassword(redisPassword);
+        }
+        return createRedisTemplate(creatFactory(configuration));
+    }
     private <T> RedisTemplate<String, T> getSerializerRedisTemplate(){
         RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
         RedisSerializer<String> serializer = new StringRedisSerializer();

@@ -14,6 +14,7 @@ import java.util.List;
 public class AssertConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/res/**").addResourceLocations( "classpath:/upload/");
 //        registry.addResourceHandler("/admin/**").addResourceLocations( "classpath:/admin/");
 //        registry.addResourceHandler("**").addResourceLocations( "classpath:/static/");
     }

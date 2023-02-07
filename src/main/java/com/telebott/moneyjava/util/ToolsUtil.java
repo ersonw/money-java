@@ -16,7 +16,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.PostConstruct;
@@ -196,7 +198,16 @@ public class ToolsUtil {
         else
             return (new StringBuilder()).append(Character.toLowerCase(s.charAt(0))).append(s.substring(1)).toString();
     }
-
+    public static String getRandomCode(int length){
+        StringBuilder code = new StringBuilder();
+        Random random = new Random();
+        for (int i=0;i< length;i++){
+            int num = random.nextInt(9);
+            if (i==0&&num==0)num++;
+            code.append(num);
+        }
+        return code.toString();
+    }
 
     //首字母转大写
     public static String toUpperCaseFirstOne(String s){
@@ -219,6 +230,13 @@ public class ToolsUtil {
         Matcher matcher=p.matcher(content);
 
         return matcher.matches();
+    }
+    public static String getBaseRootPath() throws FileNotFoundException {
+        return ResourceUtils.getURL("classpath:").getPath();
+    }
+    public static String getBaseRootPath(String path) throws FileNotFoundException {
+        if (StringUtils.isEmpty(path)) return getBaseRootPath();
+        return Objects.requireNonNull(Objects.requireNonNull(ClassUtils.getDefaultClassLoader()).getResource(path)).getPath();
     }
     public static String getIpAddr(HttpServletRequest request) {
         String ip = request.getHeader("X-Real-IP");
@@ -266,22 +284,15 @@ public class ToolsUtil {
         return getJsonBodyString(request);
     }
     public static RequestHeader getRequestHeaders(HttpServletRequest request){
-        RequestHeader data = new RequestHeader();
-        data.setToken(request.getHeader("Token"));
-        data.setIp(getIpAddr(request));
-        data.setUserAgent(request.getHeader("User-Agent"));
-        data.setServerName(request.getServerName());
-        data.setServerPort(request.getServerPort());
-        data.setUri(request.getRequestURI());
-        data.setUrl(request.getRequestURL().toString());
-        data.setSchema(request.getScheme());
+        RequestHeader data = new RequestHeader().setToken(request.getHeader("Token"))
+                .setIp(getIpAddr(request)).setUserAgent(request.getHeader("User-Agent"))
+                .setServerName(request.getServerName()).setServerPort(request.getServerPort())
+                .setUri(request.getRequestURI()).setUrl(request.getRequestURL().toString()).setSchema(request.getScheme());
         if (StringUtils.isNotEmpty(request.getHeader("X-Real-IP"))) data.setIp(request.getHeader("X-Real-IP"));
         if (StringUtils.isNotEmpty(request.getHeader("X-Forwarded-Proto"))) data.setSchema(request.getHeader("X-Forwarded-Proto"));
 //        if (StringUtils.isNotEmpty(request.getHeader("X-Forwarded-For"))) data.setServerName((request.getHeader("X-Forwarded-For")));
         if (StringUtils.isNotEmpty(request.getHeader("Host"))) data.setHost((request.getHeader("Host")));
-        data.setQuery(request.getQueryString());
-        data.setReferer(request.getHeader("referer"));
-        data.setUser(request.getHeader("user"));
+        data.setQuery(request.getQueryString()).setReferer(request.getHeader("referer")).setUser(request.getHeader("user"));
         return data;
     }
     public static String getJsonBodyString(HttpServletRequest httpServletRequest) {
